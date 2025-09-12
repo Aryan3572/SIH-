@@ -1,93 +1,47 @@
+// src/index.js
+
 const express = require('express');
-const bodyParser = require('body-parser');
-const { Pool } = require('pg');
-require('dotenv').config();
+const { PrismaClient } = require('@prisma/client');
+const cors = require('cors');
 
+const prisma = new PrismaClient();
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(bodyParser.json());
+app.use(cors());
+app.use(express.json());
 
-// Database connection
-const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
+app.post('/trips', async (req, res) => {
+    const { tripNumber, origin, destination, time, mode, accompanying, userConsent } = req.body;
 
-// Routes
-
-// Submit trip data
-app.post('/api/trips', async (req, res) => {
-    const { trip_number, origin, destination, time, mode, consent, travellers } = req.body;
-
-    if (!consent) {
-        return res.status(400).json({ error: "User consent is required." });
+    if (!userConsent) {
+        return res.status(400).json({ error: "User consent required." });
     }
 
     try {
-        const result = await pool.query(
-            `INSERT INTO trips (trip_number, origin, destination, time, mode, consent) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-            [trip_number, origin, destination, time, mode, consent]
-        );
-
-        const tripId = result.rows[0].id;
-
-        if (Array.isArray(travellers) && travellers.length > 0) {
-            for (const traveller of travellers) {
-                await pool.query(
-                    `INSERT INTO travellers (trip_id, name, age, relation) VALUES ($1, $2, $3, $4)`,
-                    [tripId, traveller.name, traveller.age, traveller.relation]
-                );
+        const trip = await prisma.trip.create({
+            data: {
+                tripNumber,
+                origin,
+                destination,
+                time: new Date(time),
+                mode,
+                accompanying,
+                userConsent,
             }
-        }
-
-        res.json({ message: "Trip saved successfully.", trip_id: tripId });
-    } catch (error) {
-        console.error("Database error:", error);
-        res.status(500).json({ error: "Internal server error." });
-    }
-});
-
-// Get all trips
-app.get('/api/trips', async (req, res) => {
-    try {
-        const result = await pool.query(`SELECT * FROM trips ORDER BY created_at DESC`);
-        res.json({ trips: result.rows });
-    } catch (error) {
-        console.error("Database error:", error);
-        res.status(500).json({ error: "Internal server error." });
-    }
-});
-
-// Get specific trip with travellers
-app.get('/api/trips/:id', async (req, res) => {
-    const tripId = req.params.id;
-
-    try {
-        const tripResult = await pool.query(`SELECT * FROM trips WHERE id = $1`, [tripId]);
-        if (tripResult.rows.length === 0) {
-            return res.status(404).json({ error: "Trip not found." });
-        }
-
-        const travellersResult = await pool.query(`SELECT * FROM travellers WHERE trip_id = $1`, [tripId]);
-        res.json({
-            trip: tripResult.rows[0],
-            travellers: travellersResult.rows
         });
+        res.json(trip);
     } catch (error) {
-        console.error("Database error:", error);
-        res.status(500).json({ error: "Internal server error." });
+        console.error(error);
+        res.status(500).json({ error: "Failed to save trip." });
     }
 });
 
-// Start server
+app.get('/trips', async (req, res) => {
+    const trips = await prisma.trip.findMany();
+    res.json(trips);
+});
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Selection</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="select-container">
+        <h1>Choose Your Access</h1>
+        <div class="cards">
+            <div class="card users-card" id="usersBtn">
+                <h2>Users</h2>
+                <p>Record your trips and access insights for better travel planning.</p>
+            </div>
+            <div class="card natpac-card" id="natpacBtn">
+                <h2>NATPAC</h2>
+                <p>Access data analytics and insights for city transportation planning.</p>
+            </div>
+        </div>
+    </div>
+    <!-- NATPAC Modal -->
+<div class="natpac-modal" id="natpacModal">
+    <div class="natpac-modal-content">
+        <h2>NATPAC Access</h2>
+        <p>Enter NATPAC access code to continue:</p>
+        <input type="password" id="natpacCode" placeholder="Access Code">
+        <div class="modal-buttons">
+            <button class="modal-btn" id="natpacSubmit">Submit</button>
+            <button class="modal-btn cancel" id="natpacCancel">Cancel</button>
+        </div>
+        <p id="natpacError" style="color:red; display:none; margin-top:10px;">Invalid Code!</p>
+    </div>
+</div>
+
+    <script src="select.js"></script>
+</body>
+</html>
