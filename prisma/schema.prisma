@@ -1,22 +1,42 @@
-// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model User {
+  id              Int              @id @default(autoincrement())
+  uuid            String           @unique
+  email           String           @unique
+  password        String
+  trips           Trip[]
+  dailyTripChains DailyTripChain[] // Added relation to fix error
 }
 
 model Trip {
-  id               Int      @id @default(autoincrement())
-  tripNumber       String
-  origin           String
-  destination      String
-  time             DateTime
-  mode             String
-  accompanying     String?   // JSON or comma-separated names
-  userConsent      Boolean
-  createdAt        DateTime  @default(now())
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  origin      String
+  destination String
+  mode        String
+  purpose     String
+  companions  String? // optional
+  startTime   DateTime
+  endTime     DateTime
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model DailyTripChain {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      DateTime
+  trips     String // JSON or list of trip IDs
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
