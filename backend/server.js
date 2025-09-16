@@ -1,13 +1,15 @@
-// src/index.js or server.js
+// server.js
 
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const cors = require('cors');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const { Parser } = require('json2csv'); // For CSV export
-require('dotenv').config();
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import cors from 'cors';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import { Parser } from 'json2csv';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
@@ -115,8 +117,13 @@ app.post('/trips', authenticateToken, async (req, res) => {
     try {
         const trip = await prisma.trip.create({
             data: {
-                tripNumber, origin, destination, time: new Date(time),
-                mode, accompanying, userConsent,
+                tripNumber,
+                origin,
+                destination,
+                time: new Date(time),
+                mode,
+                accompanying,
+                userConsent,
                 userId: req.user.userId
             }
         });
@@ -219,7 +226,7 @@ app.get('/analytics/trips-per-user', authenticateToken, async (req, res) => {
     }
 });
 
-// Trips per day (for dashboard)
+// Trips per day
 app.get('/analytics/trips-per-day', authenticateToken, async (req, res) => {
     try {
         const trips = await prisma.trip.groupBy({
